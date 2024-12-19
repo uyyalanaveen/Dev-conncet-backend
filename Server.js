@@ -11,13 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors());
 
-// Middleware to parse JSON
 app.use(express.json());
 
-// Use routes
 app.use('/api', routes);
 
-// Database connection
+
 mongoose.connect(process.env.MongoDB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -25,7 +23,6 @@ mongoose.connect(process.env.MongoDB_URI, {
 .then(() => console.log('MongoDB connected...'))
 .catch(err => console.log(err));
 
-// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

@@ -23,9 +23,9 @@ export const checkEmail = async (req, res) => {
   };
 
 export const addUser = async (req, res) => {
-    const { fullname, number, email, password } = req.body;
+    const { fullname, email, password } = req.body;
 
-    if (!fullname || !email || !password || !number) {
+    if (!fullname || !email || !password ) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -42,7 +42,6 @@ export const addUser = async (req, res) => {
         // Create a new user with the hashed password
         const newUser = new User({
             fullname,
-            number,
             email,
             password: hashedPassword,
         });
@@ -64,7 +63,6 @@ export const addUser = async (req, res) => {
                 id: newUser._id,
                 fullname: newUser.fullname,
                 email: newUser.email,
-                number: newUser.number,
             },
             token,
         });
@@ -122,7 +120,7 @@ export const loginUser = async (req, res) => {
             user: {
                 fullname: user.fullname,
                 email: user.email,
-                number: user.number
+                password: user.password
             }
         });
     } catch (error) {
