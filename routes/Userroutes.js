@@ -1,12 +1,21 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { addUser, getUser, loginUser, setNewPassword, checkEmail } from '../controllers/AuthUsers.js';
-import { requestOtp, validateOtp, sendOtplogin } from '../controllers/Otp.js';
-
+import {
+  addUser,
+  getUser,
+  loginUser,
+  setNewPassword,
+  checkEmail,
+  getUserById,
+  AllUsers,
+} from '../controllers/AuthUsers.js';
+import { validateOtp,sendOtpforSignup,requestOtp } from '../utils/OtpServices.js';
+import {updateUserProfile,} from '../controllers/ProfileController.js'
+import { authenticateUser } from '../middleware/AuthMiddleware.js';
+import upload from '../middleware/multerConfig.js';
 
 const router = express.Router();
 
-// Validation middleware
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -15,36 +24,60 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Routes with validation and error handling
+// 🔹 Register User
 router.post(
   '/register',
   [
     body('email').isEmail().withMessage('Please provide a valid email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
   ],
   handleValidationErrors,
   addUser
 );
 
-router.get('/users', getUser);
+// 🔹 Get logged-in user
+router.get('/users/me', authenticateUser, getUser);
 
+// 🔹 Get user by ID
+router.get('/users/:id', getUserById);
+// all users
+
+router.get('/userslist',AllUsers);
+
+// 🔹 Login user
 router.post(
   '/login',
   [
     body('email').isEmail().withMessage('Please provide a valid email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
   ],
   handleValidationErrors,
   loginUser
 );
 
-router.post('/request-otp', requestOtp);
+// 🔹 Password Reset
+router.put(
+  '/set-new-password',
+  [
+    body('email').isEmail().withMessage('Please provide a valid email'),
+    body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+  ],
+  handleValidationErrors,
+  setNewPassword
+);
 
-router.post('/validate-otp', validateOtp);
-
-router.post('/set-new-password', setNewPassword);
-
+// 🔹 Check if Email Exists
 router.post('/check-email', checkEmail);
-router.post('/request-otp-login', sendOtplogin);
+
+// Otp routes
+router.post('/request-otp',requestOtp);
+router.post('/validate-otp',validateOtp);
+router.post('/request-otp-login',sendOtpforSignup);
+
+
+
+// 🔹 Update user profile
+router.put('/users/me/update-profile', upload.single('profileImage') ,authenticateUser, updateUserProfile);
+
 
 export default router;
