@@ -15,9 +15,10 @@ const server = http.createServer(app); // Create an HTTP server
 const io = setupSignaling(server); // Initialize WebRTC signaling
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'https://dev-connect-1.vercel.app'],
   credentials: true,
 }));
+
 
 app.use(express.json());
 
