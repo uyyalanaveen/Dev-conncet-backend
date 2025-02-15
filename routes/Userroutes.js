@@ -10,7 +10,7 @@ import {
   AllUsers,
 } from '../controllers/AuthUsers.js';
 import { validateOtp,sendOtpforSignup,requestOtp } from '../utils/OtpServices.js';
-import {updateUserProfile,} from '../controllers/ProfileController.js'
+import {followUser, unfollowUser, updateUserProfile,} from '../controllers/ProfileController.js'
 import { authenticateUser } from '../middleware/AuthMiddleware.js';
 import upload from '../middleware/multerConfig.js';
 
@@ -78,6 +78,6 @@ router.post('/request-otp-login',sendOtpforSignup);
 
 // 🔹 Update user profile
 router.put('/users/me/update-profile', upload.single('profileImage') ,authenticateUser, updateUserProfile);
-
-
+router.post('/users/add-friend',authenticateUser,followUser);
+router.delete('/users/remove-friend',authenticateUser,unfollowUser);
 export default router;
