@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 const setupSignaling = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173", // Frontend URL
+      origin: "https://dev-connect-1.vercel.app/", // Frontend URL
       methods: ["GET", "POST"]
     }
   });
