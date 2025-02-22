@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import Room from "./models/Room.js"; // Import Room model for validation
+import Room from "./models/Room.js";
 
 export default function setupSignaling(server) {
   const io = new Server(server, {
@@ -23,56 +23,56 @@ export default function setupSignaling(server) {
 
         socket.join(roomId);
         console.log(`👤 User ${userId} joined room: ${roomId}`);
-        socket.to(roomId).emit("new-user", { userId });
+        
+        // Get all users in the room except the sender
+        const roomUsers = Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+          .filter(id => id !== socket.id);
+        
+        // Notify the new user about existing participants
+        socket.emit("room-users", { users: roomUsers });
+        
+        // Notify others about the new user
+        socket.to(roomId).emit("user-joined", { userId });
       } catch (error) {
         console.error("❌ Error joining room:", error.message);
       }
     });
 
-    // WebRTC Offer (SDP)
-    socket.on("offer", ({ roomId, offer, senderId }) => {
-      socket.to(roomId).emit("offer", { offer, senderId });
+    // WebRTC Offer
+    socket.on("offer", ({ roomId, offer, senderId, receiverId }) => {
+      socket.to(receiverId).emit("offer", { 
+        offer, 
+        senderId 
+      });
     });
 
-    // WebRTC Answer (SDP)
-    socket.on("answer", ({ roomId, answer, senderId }) => {
-      socket.to(roomId).emit("answer", { answer, senderId });
+    // WebRTC Answer
+    socket.on("answer", ({ roomId, answer, senderId, receiverId }) => {
+      socket.to(receiverId).emit("answer", { 
+        answer, 
+        senderId 
+      });
     });
 
-    // WebRTC ICE Candidate
-    socket.on("ice-candidate", ({ roomId, candidate, senderId }) => {
-      socket.to(roomId).emit("ice-candidate", { candidate, senderId });
+    // ICE Candidate
+    socket.on("ice-candidate", ({ roomId, candidate, senderId, receiverId }) => {
+      socket.to(receiverId).emit("ice-candidate", { 
+        candidate, 
+        senderId 
+      });
     });
 
-    // User speaking detection
-    socket.on("user-speaking", ({ roomId, userId }) => {
-      console.log(`🎙️ User ${userId} is speaking in room ${roomId}`);
-      socket.to(roomId).emit("user-speaking", { userId });
-    });
-
-    socket.on("user-stopped-speaking", ({ roomId, userId }) => {
-      console.log(`🔇 User ${userId} stopped speaking in room ${roomId}`);
-      socket.to(roomId).emit("user-stopped-speaking", { userId });
-    });
-
-    // User leaves a room
+    // User leaves room
     socket.on("leave-room", ({ roomId, userId }) => {
       socket.leave(roomId);
       console.log(`👤 User ${userId} left room: ${roomId}`);
-      socket.to(roomId).emit("user-left", { userId });
-
-      // Check if the room is empty
-      const room = io.sockets.adapter.rooms.get(roomId);
-      if (!room || room.size === 0) {
-        console.log(`🚫 Room ${roomId} is now empty`);
-        io.emit("room-empty", { roomId });
-      }
+      io.to(roomId).emit("user-left", { userId });
     });
 
-    // Handle user disconnection
+    // Handle disconnection
     socket.on("disconnect", () => {
       console.log(`❌ User disconnected: ${socket.id}`);
-      socket.broadcast.emit("user-disconnected", { userId: socket.id });
+      io.emit("user-disconnected", { userId: socket.id });
     });
   });
 
