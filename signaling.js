@@ -44,6 +44,17 @@ export default function setupSignaling(server) {
       socket.to(roomId).emit("ice-candidate", { candidate, senderId });
     });
 
+    // User speaking detection
+    socket.on("user-speaking", ({ roomId, userId }) => {
+      console.log(`🎙️ User ${userId} is speaking in room ${roomId}`);
+      socket.to(roomId).emit("user-speaking", { userId });
+    });
+
+    socket.on("user-stopped-speaking", ({ roomId, userId }) => {
+      console.log(`🔇 User ${userId} stopped speaking in room ${roomId}`);
+      socket.to(roomId).emit("user-stopped-speaking", { userId });
+    });
+
     // User leaves a room
     socket.on("leave-room", ({ roomId, userId }) => {
       socket.leave(roomId);
